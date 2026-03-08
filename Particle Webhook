@@ -1,0 +1,18 @@
+{
+    "name": "ntfy_power_alert",
+    "event": "power_status",
+    "parameters": [],
+    "secrets": [
+        {
+            "name": "PARTICLE_TOKEN"
+        }
+    ],
+    "template": "webhook",
+    "url": "https://ntfy.sh/",
+    "requestType": "POST",
+    "noDefaults": true,
+    "rejectUnauthorized": true,
+    "unchunked": false,
+    "data_url_response_event": false,
+    "json": "{\n  \"topic\": \"unique_ntfy_topic_name\",\n  \"title\": \"Power Monitor: {{{board}}}\",\n  \"tags\": [\n    \"{{{tag}}}\"\n  ],\n  \"priority\": {{{prio}}},\n  \"message\": \"{{{msg}}}\",\n  \"actions\": [\n    {\n      \"action\": \"http\",\n      \"label\": \"Check Status\",\n      \"clear\": true,\n      \"url\": \"https://api.particle.io/v1/devices/{{{PARTICLE_DEVICE_ID}}}/statusUpdate\",\n      \"method\": \"POST\",\n      \"headers\": {\n        \"Authorization\": \"Bearer {{{PARTICLE_TOKEN}}}\",\n        \"Content-Type\": \"application/x-www-form-urlencoded\"\n      },\n      \"body\": \"arg=check\"\n    }\n  ]\n}"
+}
