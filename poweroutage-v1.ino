@@ -12,6 +12,10 @@ int lastPowerSource = -1;
 char deviceName[32] = "Unknown Board"; // Fallback name
 bool nameRequested = false;
 
+int confirmedPowerSource = -1; 
+unsigned long lastStateChangeTime = 0;
+const unsigned long DEBOUNCE_DELAY = 5000; // Must be stable for 5 seconds
+
 // 1. Define the memory structure
 struct MemoryStructure {
     uint32_t magicNumber;
@@ -87,7 +91,7 @@ void setup() {
 }
 
 void loop() {
-    int powerSource = System.powerSource();
+    int currentPowerSource = System.powerSource();
     float batterySoc = fuel.getNormalizedSoC();
     float batteryVolts = fuel.getVCell();
 
@@ -102,22 +106,38 @@ void loop() {
     // 2. SET BASELINE ON BOOT
     // Establishes the initial state so we don't send false alerts on startup
     if (lastPowerSource == -1) {
-        lastPowerSource = powerSource;
+        lastPowerSource = currentPowerSource;
     }
 
-    // 3. IMMEDIATE ALERT: Power Change
-    if (powerSource != lastPowerSource && lastPowerSource != -1) {
-        if (powerSource == POWER_SOURCE_BATTERY) {
-            // Power Lost
-            String msg = String::format("CRITICAL: Power Lost! Battery: %.1f%%", batterySoc);
-            sendNotification(msg, "rotating_light", 5); // Priority 5
-        } else {
-            // Power Restored
-            String msg = String::format("INFO: Power Restored. Battery: %.1f%%", batterySoc);
-            sendNotification(msg, "zap", 3); // Priority 3
-        }
-        lastPowerSource = powerSource;
+    if (currentPowerSource != lastPowerSource) {
+        lastStateChangeTime = millis();
+        lastPowerSource = currentPowerSource;
     }
+
+    // Only proceed if the state has been stable for DEBOUNCE_DELAY
+    if ((millis() - lastStateChangeTime) > DEBOUNCE_DELAY) {
+        
+        // Check if this stable state is different from our last "confirmed" state
+        if (currentPowerSource != confirmedPowerSource) {
+            
+            bool wasBattery = (confirmedPowerSource == POWER_SOURCE_BATTERY);
+            bool isBattery = (currentPowerSource == POWER_SOURCE_BATTERY);
+
+            // Only alert if we transitioned specifically across the Battery/Line boundary
+            if (isBattery && !wasBattery && confirmedPowerSource != -1) {
+                // Power Lost
+                String msg = String::format("CRITICAL: Power Lost! Battery: %.1f%%", batterySoc);
+                sendNotification(msg, "rotating_light", 5); // Priority 5
+            } 
+            else if (!isBattery && wasBattery && confirmedPowerSource != -1) {
+                // Power Restored
+                String msg = String::format("INFO: Power Restored. Battery: %.1f%%", batterySoc);
+                sendNotification(msg, "zap", 3); // Priority 3
+            }
+
+            confirmedPowerSource = currentPowerSource;
+        }
+    }    
     
     // 4. SCHEDULED ALERT: Heartbeat (Health Check)
     if (millis() - lastHeartbeat >= HEARTBEAT_INTERVAL || lastHeartbeat == 0) {
