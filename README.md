@@ -11,9 +11,17 @@ Attach the Antenna: Carefully snap the cellular antenna into the u.FL connector 
 
 Connect Power: Plug the 3.7V LiPo battery into the JST connector. Then, plug the Boron into a reliable USB power source (this acts as your "AC Power").
 
-Setup the device: http://setup.particle.io/
+Setup the device: http://setup.particle.io/ (Use Chrome)
 
-Claim the Device: Open the Particle mobile app on your phone, click the + icon, scan the data matrix sticker on the Boron, and follow the prompts to claim the device to your account.
+Claim and update the Device: Follow the prompts. 
+Get Started
+Device with USB port -> Start setting up my device
+Select device -> Boron CDC Mode -> Connect (Fetching device information)
+Continue to update it. When prompted select the device and enter Boron DFU Mode and Connect
+Update device (may take a few minutes)
+Select an organization and product, Add to product
+Give your device a name, for this project it after the location it will be at. 
+When it is done flashing green and is blinking cyan again, it has connected to the cell network. 
 
 Phase 2: Generating a Particle Access Token
 Your Webhook needs permission to securely talk back to your Boron when you press the "Check Status" button on your phone. To do this, it needs an access token.
